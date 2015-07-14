@@ -31,4 +31,5 @@ Improvements
 * add caching so not all formulas have to be recomputed on each change
 * support detecting invalid formulas
 * make it work without element ids and support multiple sheets on one page
-
+* add support for mathematical functions like users are used to from spreadsheet
+software (e.g. `=POWER()` instead of currently `Math.pow()`, and so on)
