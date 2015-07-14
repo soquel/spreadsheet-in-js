@@ -3,6 +3,7 @@ Spreadsheet in js
 
 One idea to implement a spreadsheet in html and javascript.
 
+[Demo](http://soquel.github.io/spreadsheet-in-js/)
 
 Features
 ========
@@ -18,7 +19,7 @@ How it works
 
 Look in the source, it's very simple really.
 Any `onchange` event in any cell causes recomputation of all cells.
-If cell's input starts with `=`, it's parsed as a formula. Any <letter><digit>
+If cell's input starts with `=`, it's parsed as a formula. Any `<letter><digit>`
 in the string is replaced with a function call to compute that particular cell
 formula. Once all the string replacements are done, an `eval` is called on the string.
 
