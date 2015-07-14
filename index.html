@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Spreadsheet in javascript</title>
+	<meta name="description" contents="Spreadsheet in javascript">
+	<meta name="author" contents="Mateusz Misiorny">
+</head>
+<style type="text/css">
+html, body {
+	font-family: sans-serif;
+}
+table {
+	border-collapse: collapse;
+}
+td {
+	padding: 0.5em;
+	text-align: right;
+}
+th {
+	font-weight: normal;
+}
+td, th {
+	border: 1px solid gray;
+}
+.value {
+	font-weight: bold;
+}
+div.value:empty:before {
+  content: "\00a0"; /* = "&nbsp;" this makes empty div have height */
+}
+.formula {
+	color: #bbb;
+	border: 1px solid #bbb;
+}
+</style>
+<body>
+	<h1>Spreadsheet in javascript</h1>
+	<ul>
+		<li>Just a proof-of-concept -- poor code quality</li>
+		<li>No error handling whatsoever</li>
+		<li>Pure js, no dependencies, just <a href="https://github.com">a couple of screens of code</a></li>
+	</ul>
+
+	<table id="spreadsheet"></table>
+
+	<script type="text/javascript">
+	/**
+	 * There is so many things wrong with this code, don't use in production.
+	 * But hey, it works! ;)
+	 */
+
+	 /**
+	  * helper functions: ascii <-> index
+	  */
+	function index_to_char(i) {
+		return String.fromCharCode(65 + i);
+	}
+
+	function char_to_index(c) {
+		return c.charCodeAt(0) - 65;
+	}
+
+	/**
+	 * return html table of rows x cols size with input boxes and values
+	 */
+	function generate_table(cols, rows, values)	{
+		var coords, cell_content, value;
+
+		var html = '<table>';
+		for (var y = 0; y <= rows; y++)
+		{
+			html += '<tr>' + '<td>' + (y || '') + '</td>';
+			for (var x = 0; x < cols; x++)
+			{
+				if (y > 0)
+				{
+					coords = index_to_char(x) + y;
+					value = values[coords] || '';
+
+					cell_content = '<div class="value" id="value_' +
+									coords + '"></div>' +
+									'<input class="formula" id="formula_' +
+									coords + '" value="' + value + '">';
+					html += '<td>' + cell_content + '</td>';
+				}
+				else	// header row
+				{
+					html += '<th>' + index_to_char(x) + '</th>';
+				}
+			}
+			html += '</tr>';
+		}
+		html += '</table>';
+
+		return html;
+	}
+
+	/**
+	 * for specified coords ('A1', 'C3', etc.) evaluate the expression and
+	 * compute the value (calling itself, if needed, to obtain linked values)
+	 */
+	function process_field(coords) {
+		var result;
+		var formula = document.getElementById('formula_' + coords).value;
+
+		if ('=' === formula.substr(0,1))
+		{
+			result = formula.substr(1).replace(/[A-Z]\d/g, function(m) {
+				return "process_field('" + m + "')";
+			});
+		}
+		else
+			result = parseFloat(formula);
+
+		// the magic
+		result = eval(result);
+
+		if (isNaN(result))
+			result = 0;
+
+		return result;
+	}
+
+	/**
+	 * refresh the whole table (call process_field() on all cells)
+	 */
+	function compute() {
+		var elements = document.getElementsByClassName('formula');
+
+		Array.prototype.forEach.call(elements, function(el) {
+			var coords = el.id.replace('formula_', '');
+			var value = process_field(coords);
+
+			if (value === 0 && el.value === '')
+				value = '';
+
+			document.getElementById('value_' + coords).innerHTML = value;
+		});
+	}
+
+
+	/**
+	 * setup
+	 */
+	var cols = 4;
+	var rows = 4;
+
+	// just some demo values
+	var values = {
+		'A1': '15',
+		'A2': '6.6',
+		'B2': '=A1+3',
+		'C1': '=A1+A2+A3',
+		'C2': '=C1/3',
+		'C3': '=B2*(A1+2)',
+	};
+
+	document.getElementById('spreadsheet').innerHTML = generate_table(cols, rows, values);
+	compute();
+
+	Array.prototype.forEach.call(document.getElementsByClassName('formula'),
+		function(el) {
+			el.onchange = compute;
+		});
+
+	</script>
+</body>
+</html>
